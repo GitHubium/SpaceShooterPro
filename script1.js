@@ -12,6 +12,9 @@ var leftIsPressed = false;
 var leftIsPressedInstant = false;
 var rightIsPressed = false;
 var rightIsPressedInstant = false;
+var isTouchMode = false;
+var touchPosXs = [];
+var touchPosYs = [];
 
 // Make Math more useful
 if (!("hypot" in Math)) {  // Polyfill
@@ -58,7 +61,7 @@ document.addEventListener('keydown', function(event) {
 });
 window.addEventListener('resize', resizeCanvas, false);
 resizeCanvas();
-document.addEventListener('mousedown', function(evt) {
+canvas.addEventListener('mousedown', function(evt) {
   mouseButton = evt.button || evt.which;
   if (mouseButton === 1) {
     leftIsPressed = true;
@@ -69,7 +72,7 @@ document.addEventListener('mousedown', function(evt) {
   }
 
 });
-document.addEventListener('mouseup', function(evt) {
+canvas.addEventListener('mouseup', function(evt) {
   mouseButton = evt.button || evt.which;
   if (mouseButton === 1) {
     leftIsPressed = false;
@@ -78,30 +81,24 @@ document.addEventListener('mouseup', function(evt) {
   }
 });
 
-
 /* Listners for mobile */
 canvas.addEventListener("touchstart", function (e) {
   mousePos = getTouchPos(canvas, e);
   mouseX = mousePos.x;
   mouseY = mousePos.y;
-  var touch = e.touches[0];
-  var mouseEvent = new MouseEvent("mousedown", {
-    clientX: touch.clientX,
-    clientY: touch.clientY
-  });
-  canvas.dispatchEvent(mouseEvent);
+  isTouchMode = true;
+  leftIsPressed = true;
+  leftIsPressedInstant = true;
 }, false);
 canvas.addEventListener("touchend", function (e) {
-  var mouseEvent = new MouseEvent("mouseup", {});
-  canvas.dispatchEvent(mouseEvent);
+  leftIsPressed = false;
+  isTouchMode = false;
 }, false);
 canvas.addEventListener("touchmove", function (e) {
-  var touch = e.touches[0];
-  var mouseEvent = new MouseEvent("mousemove", {
-    clientX: touch.clientX,
-    clientY: touch.clientY
-  });
-  canvas.dispatchEvent(mouseEvent);
+  mousePos = getTouchPos(canvas, e);
+  mouseX = mousePos.x;
+  mouseY = mousePos.y;
+
 }, false);
 
 
@@ -159,9 +156,16 @@ function getMousePos(canvas, evt) {
 // Get the position of a touch relative to the canvas
 function getTouchPos(canvasDom, touchEvent) {
   var rect = canvasDom.getBoundingClientRect();
+  touchy = touchEvent.touches;
+  touchPosXs = [];
+  touchPosYs = [];
+  for (var i = 0; i < touchy.length; i ++) {
+    touchPosXs.push(touchy[i].clientX);
+    touchPosYs.push(touchy[i].clientY);
+  }
   return {
-    x: (touchEvent.touches[0].clientX - rect.left) / (rect.right - rect.left) * canvas.width,
-    y: (touchEvent.touches[0].clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
+    x: (touchPosXs[0] - rect.left) / (rect.right - rect.left) * canvas.width,
+    y: (touchPosYs[0] - rect.top) / (rect.bottom - rect.top) * canvas.height
   };
 }
 function draw(e) {
@@ -290,12 +294,12 @@ var Triangle = function(x, y) {
     ctx.lineTo(this.x+chX3+chY3, this.y+chY3-chX3);
     ctx.closePath();
     ctx.stroke();
-
   }
 };
 
 var Player = function() {
   this.rot = 0;
+  this.multiTouchIteration = 0;
   gameManager.objs.push(this);
 
   this.resize = function() {
@@ -305,12 +309,22 @@ var Player = function() {
   this.resize();
 
   this.update = function(d) {
-    this.rot = Math.atan2(mouseY-this.y, mouseX-this.x);
-    if (leftIsPressed) {// Left mouse button
+
+    if (isTouchMode) {
+  ///    console.log(this.multiTouchIteration, touchPosXs);
+      if (++this.multiTouchIteration >= touchPosXs.length) {
+        this.multiTouchIteration = 0;
+      }
+      this.rot = Math.atan2(touchPosYs[this.multiTouchIteration]-this.y, touchPosXs[this.multiTouchIteration]-this.x);
       new Bullet(this.x, this.y, this.rot);
-    }
-    if (rightIsPressedInstant) {
-      console.log('oh yeah');
+    } else {
+      this.rot = Math.atan2(mouseY-this.y, mouseX-this.x);
+      if (leftIsPressed) {// Left mouse button
+        new Bullet(this.x, this.y, this.rot);
+      }
+      if (rightIsPressedInstant) {
+        console.log('oh yeah');
+      }
     }
   }
 
@@ -347,7 +361,7 @@ var GameManager = function() {
     }
   }
   this.onKeyDown = function(evt) {
-    console.log(evt);
+
   };
   this.update = function() {
 
