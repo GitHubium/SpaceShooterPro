@@ -3,6 +3,7 @@
 var pageIsLoaded = false;
 var isFullScreen = false;
 var ctx;
+var fullscreenEnterTimestamp;
 
 // Make Math more useful
 if (!("hypot" in Math)) {  // Polyfill
@@ -18,7 +19,7 @@ function pageLoaded() {
 
   /* Config resizable canvas */
   function resizeCanvas() {
-    if (isFullScreen && canvas.height > window.innerHeight) {// if fullscreen and canvas is getting smaller
+    if (isFullScreen && Date.now()-fullscreenEnterTimestamp > 500 && canvas.height > window.innerHeight) {// if fullscreen and screen size didn't change imediately after you entered fullscreen (mobile-friendly) and canvas is getting smaller
       isFullScreen = false;
       document.getElementById("fullscreen-button").style.display = "";
     }
@@ -56,6 +57,7 @@ function requestFullScreen() {
   var requestMethod = el.requestFullScreen || el.webkitRequestFullScreen
   || el.mozRequestFullScreen || el.msRequestFullScreen;
 
+
   if (requestMethod) {
 
     // Native full screen.
@@ -72,6 +74,7 @@ function requestFullScreen() {
   }
   document.getElementById("fullscreen-button").style.display = "none";
   isFullScreen = true;
+  fullscreenEnterTimestamp = Date.now();
 }
 
 
