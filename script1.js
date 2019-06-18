@@ -23,75 +23,104 @@ if (!("hypot" in Math)) {  // Polyfill
 function pageLoaded() {
   /* Define canvas */
   canvas = document.getElementById("can");
-  canvas.oncontextmenu = function (e) {// Disable right click popup
-      e.preventDefault();
+  window.oncontextmenu = function (e) {// Disable right click popup
+    e.preventDefault();
   };
   ctx = canvas.getContext("2d");
 
   /* Config resizable canvas */
   function resizeCanvas() {
     if (isFullScreen && Date.now()-fullscreenEnterTimestamp > 500 && canvas.height > window.innerHeight) {// if fullscreen and screen size didn't change imediately after you entered fullscreen (mobile-friendly) and canvas is getting smaller
-      isFullScreen = false;
-      document.getElementById("fullscreen-button").style.display = "";
-    }
-    var resizeDifferenceX = (window.innerWidth-canvas.width)/2;
-    var resizeDifferenceY = (window.innerHeight-canvas.height)/2;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    gameManager.resize(resizeDifferenceX, resizeDifferenceY);
+    isFullScreen = false;
+    document.getElementById("fullscreen-button").style.display = "";
+  }
+  var resizeDifferenceX = (window.innerWidth-canvas.width)/2;
+  var resizeDifferenceY = (window.innerHeight-canvas.height)/2;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  gameManager.resize(resizeDifferenceX, resizeDifferenceY);
+}
+
+
+ctx.fillStyle = "blue";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// --- Set up gameManager
+gameManager = new GameManager();
+gameManager.init();
+
+
+
+/* Listeners for PC */
+document.addEventListener('mousemove', draw, false);
+document.addEventListener('keydown', function(event) {
+  gameManager.onKeyDown(event);
+});
+window.addEventListener('resize', resizeCanvas, false);
+resizeCanvas();
+document.addEventListener('mousedown', function(evt) {
+  mouseButton = evt.button || evt.which;
+  if (mouseButton === 1) {
+    leftIsPressed = true;
+    leftIsPressedInstant = true;
+  } else {
+    rightIsPressed = true;
+    rightIsPressedInstant = true;
   }
 
-
-  ctx.fillStyle = "blue";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // --- Set up gameManager
-  gameManager = new GameManager();
-  gameManager.init();
-
-
-
-  // Set up listeners
-  document.addEventListener('mousemove', draw, false);
-  document.addEventListener('keydown', function(event) {
-      gameManager.onKeyDown(event);
-  });
-  window.addEventListener('resize', resizeCanvas, false);
-  resizeCanvas();
-  document.addEventListener('mousedown', function(evt) {
-    mouseButton = evt.button || evt.which;
-    if (mouseButton === 1) {
-      leftIsPressed = true;
-      leftIsPressedInstant = true;
-    } else {
-      rightIsPressed = true;
-      rightIsPressedInstant = true;
-    }
-
-  });
-  document.addEventListener('mouseup', function(evt) {
-    mouseButton = evt.button || evt.which;
-    if (mouseButton === 1) {
-      leftIsPressed = false;
-    } else {
-      rightIsPressed = false;
-    }
-  });
-
-
-  var metaUpdate = function () {
-    gameManager.update();
-    window.requestAnimationFrame(metaUpdate);
+});
+document.addEventListener('mouseup', function(evt) {
+  mouseButton = evt.button || evt.which;
+  if (mouseButton === 1) {
+    leftIsPressed = false;
+  } else {
+    rightIsPressed = false;
   }
+});
+
+
+/* Listners for mobile */
+canvas.addEventListener("touchstart", function (e) {
+  mousePos = getTouchPos(canvas, e);
+  mouseX = mousePos.x;
+  mouseY = mousePos.y;
+  var touch = e.touches[0];
+  var mouseEvent = new MouseEvent("mousedown", {
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  });
+  canvas.dispatchEvent(mouseEvent);
+}, false);
+canvas.addEventListener("touchend", function (e) {
+  var mouseEvent = new MouseEvent("mouseup", {});
+  canvas.dispatchEvent(mouseEvent);
+}, false);
+canvas.addEventListener("touchmove", function (e) {
+  var touch = e.touches[0];
+  var mouseEvent = new MouseEvent("mousemove", {
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  });
+  canvas.dispatchEvent(mouseEvent);
+}, false);
+
+
+
+
+var metaUpdate = function () {///todo check for cross platform and debug here: http://bencentra.com/code/2014/12/05/html5-canvas-touch-events.html
+  gameManager.update();
   window.requestAnimationFrame(metaUpdate);
+}
+window.requestAnimationFrame(metaUpdate);
 
-  // ---
+// ---
 
-  /* Update flag */
-  pageIsLoaded = true;
+/* Update flag */
+pageIsLoaded = true;
 }
 
 /** Helper functions **/
+
 
 function requestFullScreen() {
   var el = document.body;
@@ -121,16 +150,24 @@ function requestFullScreen() {
 }
 
 function getMousePos(canvas, evt) {
-    var rect = canvas.getBoundingClientRect();
-    return {
-        x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
-        y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
-    };
+  var rect = canvas.getBoundingClientRect();
+  return {
+    x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
+    y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
+  };
+}
+// Get the position of a touch relative to the canvas
+function getTouchPos(canvasDom, touchEvent) {
+  var rect = canvasDom.getBoundingClientRect();
+  return {
+    x: (touchEvent.touches[0].clientX - rect.left) / (rect.right - rect.left) * canvas.width,
+    y: (touchEvent.touches[0].clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
+  };
 }
 function draw(e) {
-    var pos = getMousePos(canvas, e);
-    mouseX = pos.x;
-    mouseY = pos.y;
+  var pos = getMousePos(canvas, e);
+  mouseX = pos.x;
+  mouseY = pos.y;
 }
 
 /** Game "objects" **/
@@ -319,67 +356,59 @@ var GameManager = function() {
     var delta = timestamp - this._lastTimestamp;
     this._lastTimestamp = timestamp;
 
-    /* Get mouse position */
-    function getMousePos(canvas, evt) {
-    var rect = canvas.getBoundingClientRect();
-    return {
-        x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
-        y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
-    };
 
-}
 
     /* Create more game objects
     if (Math.random() < 0.01) {
-      console.log('hey');
-      new Triangle(1, Math.random()*100);
+    console.log('hey');
+    new Triangle(1, Math.random()*100);
+  }
+  */
+  if (rightIsPressedInstant) new Triangle(mouseX, mouseY);
+
+  /* Background */
+  ctx.fillStyle = "rgb(0, 0, 0)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  /* Update game objects */
+  for (var i = this.objs.length-1; i >= 0; i--) {
+    var obj = this.objs[i];
+    obj.update(delta);
+    if (obj.isDead) {
+      this.objs.splice(i, 1);
     }
-    */
-    if (rightIsPressedInstant) new Triangle(mouseX, mouseY);
+  }
 
-    /* Background */
-    ctx.fillStyle = "rgb(0, 0, 0)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  /* Draw game objects */
+  for (var i = this.objs.length-1; i >= 0; i--) {
+    this.objs[i].draw();
+  }
+  ctx.stroke();
 
-    /* Update game objects */
-    for (var i = this.objs.length-1; i >= 0; i--) {
-      var obj = this.objs[i];
-      obj.update(delta);
-      if (obj.isDead) {
-         this.objs.splice(i, 1);
-      }
+
+
+
+
+  /* Remove enemies */
+  for (var i = this.bads.length-1; i >= 0; i--) {
+    if (this.bads[i].isDead) {
+      this.bads.splice(i, 1);
     }
+  }
 
-    /* Draw game objects */
-    for (var i = this.objs.length-1; i >= 0; i--) {
-      this.objs[i].draw();
-    }
-    ctx.stroke();
+  /* Reset mouse press */
+  leftIsPressedInstant = false;
+  rightIsPressedInstant = false;
 
-
-
-
-
-    /* Remove enemies */
-    for (var i = this.bads.length-1; i >= 0; i--) {
-      if (this.bads[i].isDead) {
-        this.bads.splice(i, 1);
-      }
-    }
-
-    /* Reset mouse press */
-    leftIsPressedInstant = false;
-    rightIsPressedInstant = false;
-
-    /* Increase frame number */
-    this.frameCount ++;
+  /* Increase frame number */
+  this.frameCount ++;
 
 
-/*
+  /*
   ctx.fillStyle = "blue";
   ctx.font = "bold 16px Arial";
   ctx.fillText("Lava", (canvas.width / 2) - 17, (canvas.height / 2) + 8);
-*/
+  */
 
 
 
