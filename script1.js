@@ -7,6 +7,7 @@ var fullscreenEnterTimestamp;
 var mouseX = 0;
 var mouseY = 0;
 var canvas;
+var diagonalCanvasSize = null;
 var gameManager;
 var leftIsPressed = false;
 var leftIsPressedInstant = false;
@@ -31,6 +32,7 @@ function pageLoaded() {
   };
   ctx = canvas.getContext("2d");
 
+
   /* Config resizable canvas */
   function resizeCanvas() {
     if (isFullScreen && Date.now()-fullscreenEnterTimestamp > 500 && canvas.height > window.innerHeight) {// if fullscreen and screen size didn't change imediately after you entered fullscreen (mobile-friendly) and canvas is getting smaller
@@ -39,14 +41,15 @@ function pageLoaded() {
   }
   var resizeDifferenceX = (window.innerWidth-canvas.width)/2;
   var resizeDifferenceY = (window.innerHeight-canvas.height)/2;
+  diagonalCanvasSize = Math.sqrt(window.innerWidth*window.innerWidth+window.innerHeight*window.innerHeight);
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  gameManager.resize(resizeDifferenceX, resizeDifferenceY);
+  gameManager.resize(resizeDifferenceX/2, resizeDifferenceY/2);
+  ctx.lineWidth = diagonalCanvasSize*0.001;
 }
 
 
-ctx.fillStyle = "blue";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
+
 
 // --- Set up gameManager
 gameManager = new GameManager();
@@ -62,6 +65,7 @@ document.addEventListener('keydown', function(event) {
 window.addEventListener('resize', resizeCanvas, false);
 resizeCanvas();
 canvas.addEventListener('mousedown', function(evt) {
+  isTouchMode = false;
   mouseButton = evt.button || evt.which;
   if (mouseButton === 1) {
     leftIsPressed = true;
@@ -91,8 +95,10 @@ canvas.addEventListener("touchstart", function (e) {
   leftIsPressedInstant = true;
 }, false);
 canvas.addEventListener("touchend", function (e) {
+  mousePos = getTouchPos(canvas, e);
+  mouseX = mousePos.x;
+  mouseY = mousePos.y;
   leftIsPressed = false;
-  isTouchMode = false;
 }, false);
 canvas.addEventListener("touchmove", function (e) {
   mousePos = getTouchPos(canvas, e);
@@ -183,10 +189,10 @@ var Bullet = function(x, y, rot) {
   this.y = y;
   this.chX = Math.cos(rot);
   this.chY = Math.sin(rot);
-  this.length = 11;
+  this.length = 11*diagonalCanvasSize*0.001;
   this.x2 = this.x + this.chX * this.length;
   this.y2 = this.y + this.chY * this.length;
-  this.speed = 1;
+  this.speed = 1*diagonalCanvasSize*0.001;
   this.timeLeft = 1000;
 
   this.resize = function(diffX, diffY) {
@@ -208,7 +214,7 @@ var Bullet = function(x, y, rot) {
       var chX = bad.x-this.x;
       var chY = bad.y-this.y;
       var dist = Math.sqrt(chX*chX+chY*chY);
-      if (dist < 10) {
+      if (dist < 0.01*diagonalCanvasSize) {
         bad.hp --;
         if (bad.redness < 0.5) {
           bad.redness = 3;
@@ -244,19 +250,25 @@ var Triangle = function(x, y) {
   this.rot1 = Math.random();
   this.rot2 = this.rot1+Math.PI/1.5;
   this.rot3 = this.rot2+Math.PI/1.5;
-  this.speed = 0.01;
-  this.size = 10;
+  this.speed = 0.00001;
+  this.size = 0.01*diagonalCanvasSize;
   this.hp = 5;
   this.velX = gameManager.player.x-this.x;
   this.velY = gameManager.player.y-this.y;
   var dist = Math.sqrt(this.velX*this.velX+this.velY*this.velY);
-  this.velX *= this.speed / dist;
-  this.velY *= this.speed / dist;
+  this.velX *= this.speed * diagonalCanvasSize / dist;
+  this.velY *= this.speed * diagonalCanvasSize / dist;
   this.redness = 0;
 
   this.resize = function(diffX, diffY) {
-    this.x += diffX;
-    this.y += diffY;
+    this.size = 0.01*diagonalCanvasSize;
+    this.x = canvas.width*this.x/(canvas.width-diffX*4);
+    this.y = canvas.height*this.y/(canvas.height-diffY*4);
+    this.velX = gameManager.player.x-this.x;
+    this.velY = gameManager.player.y-this.y;
+    var dist = Math.sqrt(this.velX*this.velX+this.velY*this.velY);
+    this.velX *= this.speed * diagonalCanvasSize / dist;
+    this.velY *= this.speed * diagonalCanvasSize / dist;
   }
   this.update = function(d) {
     this.x += this.velX*d;
@@ -303,6 +315,8 @@ var Player = function() {
   gameManager.objs.push(this);
 
   this.resize = function() {
+    this.size1 = 20*diagonalCanvasSize*0.0005;
+    this.size2 = this.size1*0.75;
     this.x = canvas.width/2;
     this.y = canvas.height/2;
   }
@@ -311,19 +325,20 @@ var Player = function() {
   this.update = function(d) {
 
     if (isTouchMode) {
-  ///    console.log(this.multiTouchIteration, touchPosXs);
-      if (++this.multiTouchIteration >= touchPosXs.length) {
-        this.multiTouchIteration = 0;
+      if (touchPosXs.length > 0) {
+        if (++this.multiTouchIteration >= touchPosXs.length) {
+          this.multiTouchIteration = 0;
+        }
+        this.rot = Math.atan2(touchPosYs[this.multiTouchIteration]-this.y, touchPosXs[this.multiTouchIteration]-this.x);
+        new Bullet(this.x, this.y, this.rot);
       }
-      this.rot = Math.atan2(touchPosYs[this.multiTouchIteration]-this.y, touchPosXs[this.multiTouchIteration]-this.x);
-      new Bullet(this.x, this.y, this.rot);
     } else {
       this.rot = Math.atan2(mouseY-this.y, mouseX-this.x);
       if (leftIsPressed) {// Left mouse button
         new Bullet(this.x, this.y, this.rot);
       }
       if (rightIsPressedInstant) {
-        console.log('oh yeah');
+        console.log('shoot missile');
       }
     }
   }
@@ -335,13 +350,13 @@ var Player = function() {
     var chX = Math.cos(this.rot);
     var chY = Math.sin(this.rot);
     ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.x+chX*20, this.y+chY*20);
-    ctx.lineTo(this.x-chX*15+chY*20, this.y-chY*15-chX*20);
+    ctx.lineTo(this.x+chX*this.size1, this.y+chY*this.size1);
+    ctx.lineTo(this.x-chX*this.size2+chY*this.size1, this.y-chY*this.size2-chX*this.size1);
     ctx.closePath();
 
     ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.x+chX*20, this.y+chY*20);
-    ctx.lineTo(this.x-chX*15-chY*20, this.y-chY*15+chX*20);
+    ctx.lineTo(this.x+chX*this.size1, this.y+chY*this.size1);
+    ctx.lineTo(this.x-chX*this.size2-chY*this.size1, this.y-chY*this.size2+chX*this.size1);
     ctx.closePath();
   }
 };
