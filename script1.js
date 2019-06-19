@@ -1,3 +1,18 @@
+//// TODO:
+// Add missiles
+// Kill bullets only if they go off-screen
+// Spawn triangles/squares/shooters
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
 
 // Variables
 var pageIsLoaded = false;
@@ -16,6 +31,7 @@ var rightIsPressedInstant = false;
 var isTouchMode = false;
 var touchPosXs = [];
 var touchPosYs = [];
+var isPaused = false;
 
 // Make Math more useful
 if (!("hypot" in Math)) {  // Polyfill
@@ -193,7 +209,6 @@ var Bullet = function(x, y, rot) {
   this.x2 = this.x + this.chX * this.length;
   this.y2 = this.y + this.chY * this.length;
   this.speed = 1*diagonalCanvasSize*0.001;
-  this.timeLeft = 1000;
 
   this.resize = function(diffX, diffY) {
     this.x += diffX;
@@ -214,7 +229,7 @@ var Bullet = function(x, y, rot) {
       var chX = bad.x-this.x;
       var chY = bad.y-this.y;
       var dist = Math.sqrt(chX*chX+chY*chY);
-      if (dist < 0.01*diagonalCanvasSize) {
+      if (dist < 0.015*diagonalCanvasSize) {
         bad.hp --;
         if (bad.redness < 0.5) {
           bad.redness = 3;
@@ -224,8 +239,7 @@ var Bullet = function(x, y, rot) {
       }
     }
 
-    this.timeLeft -= d;
-    if (this.timeLeft <= 0) {
+    if (this.x2 < 0 || this.x2 > canvas.width || this.y2 < 0 || this.y2 > canvas.height) {
       this.isDead = true;
     }
   }
@@ -250,7 +264,7 @@ var Triangle = function(x, y) {
   this.rot1 = Math.random();
   this.rot2 = this.rot1+Math.PI/1.5;
   this.rot3 = this.rot2+Math.PI/1.5;
-  this.speed = 0.00001;
+  this.speed = 0.00002;
   this.size = 0.01*diagonalCanvasSize;
   this.hp = 5;
   this.velX = gameManager.player.x-this.x;
@@ -309,6 +323,72 @@ var Triangle = function(x, y) {
   }
 };
 
+var Square = function(x, y) {
+  this.isDead = false;
+  gameManager.objs.push(this);
+  gameManager.bads.push(this);
+  this.x = x;
+  this.y = y;
+  this.rot1 = Math.random();
+  this.rot2 = this.rot1+Math.PI;
+  this.speed = 0.00001;
+  this.size = 0.01*diagonalCanvasSize;
+  this.hp = 50;
+  this.velX = gameManager.player.x-this.x;
+  this.velY = gameManager.player.y-this.y;
+  var dist = Math.sqrt(this.velX*this.velX+this.velY*this.velY);
+  this.velX *= this.speed * diagonalCanvasSize / dist;
+  this.velY *= this.speed * diagonalCanvasSize / dist;
+  this.redness = 0;
+
+  this.resize = function(diffX, diffY) {
+    this.size = 0.01*diagonalCanvasSize;
+    this.x = canvas.width*this.x/(canvas.width-diffX*4);
+    this.y = canvas.height*this.y/(canvas.height-diffY*4);
+    this.velX = gameManager.player.x-this.x;
+    this.velY = gameManager.player.y-this.y;
+    var dist = Math.sqrt(this.velX*this.velX+this.velY*this.velY);
+    this.velX *= this.speed * diagonalCanvasSize / dist;
+    this.velY *= this.speed * diagonalCanvasSize / dist;
+  }
+  this.update = function(d) {
+    this.x += this.velX*d;
+    this.y += this.velY*d;
+    var rotDiff = d*0.0015;
+    this.rot1 += rotDiff;
+    this.rot2 += rotDiff;
+
+    this.redness *= 0.5;
+
+    if (this.hp <= 0) {
+      this.isDead = true;
+    }
+  }
+  this.draw = function() {
+    var actualRedness;
+    var greenAndBlueness = 255*(1-this.redness);
+    if (greenAndBlueness < 0) {
+      actualRedness = 255+greenAndBlueness;
+      greenAndBlueness = 0;
+    } else {
+      actualRedness = 255;
+    }
+    ctx.strokeStyle = 'rgb('+actualRedness+', '+greenAndBlueness+', '+greenAndBlueness+')';
+    ctx.beginPath();
+    var chX1 = Math.cos(this.rot1)*this.size;
+    var chY1 = Math.sin(this.rot1)*this.size;
+    var chX2 = Math.cos(this.rot2)*this.size;
+    var chY2 = Math.sin(this.rot2)*this.size;
+    ctx.lineTo(this.x+chX1+chY1, this.y+chY1-chX1);
+    ctx.lineTo(this.x+chX1-chY1, this.y+chY1+chX1);
+    ctx.lineTo(this.x+chX2+chY2, this.y+chY2-chX2);
+    ctx.lineTo(this.x+chX2-chY2, this.y+chY2+chX2);
+
+    ctx.closePath();
+    ctx.stroke();
+  }
+};
+
 var Player = function() {
   this.rot = 0;
   this.multiTouchIteration = 0;
@@ -361,6 +441,22 @@ var Player = function() {
   }
 };
 
+var Factory = function() {
+  this.timeLeft = this.timeLeftReset = 3000;
+
+  this.update = function(d) {
+    this.timeLeft -= d;
+    if (this.timeLeft <= 0) {
+      this.timeLeft += this.timeLeftReset;
+      var randomAngle = Math.random()*Math.PI;
+      var newX = diagonalCanvasSize*Math.cos(randomAngle);
+      var newY = diagonalCanvasSize*Math.sin(randomAngle);
+      new Square(newX, newY);
+      new Triangle(newY, newX);
+    }
+  }
+};
+
 var GameManager = function() {
   this.frameCount = 0;
   this._lastTimestamp = Date.now();
@@ -368,6 +464,7 @@ var GameManager = function() {
   this.bads = [];
   this.init = function() {
     this.player = new Player();
+    this.factory = new Factory();
   };
   this.resize = function(diffX, diffY) {
     /* Resize game objects */
@@ -376,7 +473,9 @@ var GameManager = function() {
     }
   }
   this.onKeyDown = function(evt) {
-
+    if (evt.key === "p") {
+      isPaused = !isPaused;
+    }
   };
   this.update = function() {
 
@@ -387,13 +486,14 @@ var GameManager = function() {
 
 
 
-    /* Create more game objects
-    if (Math.random() < 0.01) {
-    console.log('hey');
-    new Triangle(1, Math.random()*100);
-  }
-  */
-  if (rightIsPressedInstant) new Triangle(mouseX, mouseY);
+    /* Pause */
+    if (!isPaused) {
+
+
+
+    /* Factory */
+
+  this.factory.update(delta);
 
   /* Background */
   ctx.fillStyle = "rgb(0, 0, 0)";
@@ -407,6 +507,15 @@ var GameManager = function() {
       this.objs.splice(i, 1);
     }
   }
+  /* Remove enemies */
+  for (var i = this.bads.length-1; i >= 0; i--) {
+    if (this.bads[i].isDead) {
+      this.bads.splice(i, 1);
+    }
+  }
+
+
+}
 
   /* Draw game objects */
   for (var i = this.objs.length-1; i >= 0; i--) {
@@ -418,12 +527,7 @@ var GameManager = function() {
 
 
 
-  /* Remove enemies */
-  for (var i = this.bads.length-1; i >= 0; i--) {
-    if (this.bads[i].isDead) {
-      this.bads.splice(i, 1);
-    }
-  }
+
 
   /* Reset mouse press */
   leftIsPressedInstant = false;
