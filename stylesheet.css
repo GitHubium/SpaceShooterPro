@@ -20,3 +20,43 @@ h1 {
   padding-bottom: 6px;
   font-size: 1cm;
 }
+#overlay-content {
+  display: none;
+  font-size: 20px;
+  position:   absolute;
+  top:        0;
+  left:       0;
+  right: 0;
+  bottom: 0;
+}
+
+
+.overlay {
+
+  border: solid 1px white;
+  position: absolute;
+  width: 48.75%;
+  padding: 5%;
+  text-align: center;
+  top: 0;
+  cursor: pointer;
+  top: 50%;
+  transform: 			translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.1);
+
+}
+
+.overlay h1,p {
+  color: rgb(200, 200, 200);
+}
+.overlay:hover h1 {
+  font-size: 50px;
+  color: white;
+}
+#overlay-left {
+  left: 1%;
+}
+#overlay-right {
+  right: 1%;
+
+}
