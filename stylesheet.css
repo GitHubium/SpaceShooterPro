@@ -1,11 +1,15 @@
 html, body {
     overflow: hidden;
 }
-
 h1 {
   color: red;
 }
-
+#overlay-content h2 {
+  text-align: center;
+  font-size: 6vw;
+  color: white;
+  margin-top: 5vh;
+}
 #can {
     position:fixed;
     left:0;
@@ -32,7 +36,6 @@ h1 {
 
 
 .overlay {
-
   border: solid 1px white;
   position: absolute;
   width: 48.75%;
@@ -43,9 +46,7 @@ h1 {
   top: 50%;
   transform: 			translateY(-50%);
   background-color: rgba(255, 255, 255, 0.1);
-
 }
-
 .overlay h1,p {
   color: rgb(200, 200, 200);
 }
@@ -58,5 +59,4 @@ h1 {
 }
 #overlay-right {
   right: 1%;
-
 }
