@@ -1,10 +1,11 @@
-//// TODO:
-// goals + explosions
-// mobile friendly missiles
-// finish levels 6-17
-// favicon.ico
+//// TODO: 3
+// finish levels 16-17
+// make win screen less bland
+// create new enemy type
 
-
+// Bugs: 2
+// Overlay options resize the screen
+// Right overlay option larger than left  solution: reset mouse pos
 
 // Variables
 var pageIsLoaded = false;
@@ -134,7 +135,8 @@ function overlayOptions(option) {
   if (option === 1) {
     isPaused = false;
     gameManager.factory.phase = 0;
-    gameManager.factory.wave --;
+    gameManager.factory.phaseTimeout = -1;
+    gameManager.factory.isReadyForNextPhase = false;
     gameManager.bads = [];// Clear enemies
     gameManager.objs = [gameManager.player];// Clear enemies/bullets
     gameManager.factory.waveTextTimeout = gameManager.factory.waveTextReset;
@@ -207,6 +209,11 @@ function draw(e) {
   var pos = getMousePos(canvas, e);
   mouseX = pos.x;
   mouseY = pos.y;
+}
+
+function randomSeed(seed) {
+    var x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
 }
 
 /** Game "objects" **/
@@ -477,7 +484,7 @@ var Missile = function(x, y, rot) {
   this.rot2 = rot+Math.PI/5;
   this.acceleration = 0.0002;
   this.speed = 0.000035*diagonalCanvasSize;
-  this.size = 0.0055*diagonalCanvasSize;
+  this.size = 0.006*diagonalCanvasSize;
 
   this.resize = function() {};
 
@@ -923,8 +930,6 @@ var Player = function() {
   this.bulletTimeout = this.bulletTimeoutReset = 20;
   this.missileTimeout = this.missileTimeoutReset = 2000;
   this.invalidTouchIndex = null;
-  this.showMissileBox = false;
-  this.showMissileRing = false;
   gameManager.objs.push(this);
 
   this.resize = function() {
@@ -932,8 +937,19 @@ var Player = function() {
     this.size2 = this.size1*0.75;
     this.x = halfWidth;
     this.y = halfHeight;
+
+    this.missileButX1 = canvas.width-diagonalCanvasSize*0.2;
+    this.missileButX2 = canvas.width*0.99;
+    this.missileButY1 = canvas.height-diagonalCanvasSize*0.08;
+    this.missileButY2 = canvas.height*0.99;
+    this.missileButXDiff = this.missileButX2-this.missileButX1;
+    this.missileButYDiff = this.missileButY2-this.missileButY1;
+    this.missileButXMid = this.missileButX1+this.missileButXDiff/2;
+    this.missileButYMid = this.missileButY1+this.missileButYDiff/2;
+    this.missileButSixteenth = this.missileButXDiff/16;
   }
   this.resize();
+
 
   this.update = function(d) {
 
@@ -944,31 +960,32 @@ var Player = function() {
       this.missileTimeout -= d;
     }
 
-    this.showMissileBox = false;
-
     if (isTouchMode) {
       if (touchPosXs.length > 0) {
-        if (this.bulletTimeout <= 0) {
-
-          this.bulletTimeout += this.bulletTimeoutReset;
-          if (++this.multiTouchIteration >= touchPosXs.length) {
-            this.multiTouchIteration = 0;
-          }
-          if (this.multiTouchIteration === this.invalidTouchIndex) {
+          if (touchPosXs.length !== 1 || this.invalidTouchIndex === null) {// If NOT exclusively pressing the missile button
             if (++this.multiTouchIteration >= touchPosXs.length) {
               this.multiTouchIteration = 0;
             }
+            if (this.multiTouchIteration === this.invalidTouchIndex) {
+              if (++this.multiTouchIteration >= touchPosXs.length) {
+                this.multiTouchIteration = 0;
+              }
+            }
+
+            this.hasShotBefore = true;
+            var goAgain = 2;
+            while (this.bulletTimeout <= 0 && goAgain) {
+              this.bulletTimeout += this.bulletTimeoutReset;
+              this.rot = Math.atan2(touchPosYs[this.multiTouchIteration]-this.y, touchPosXs[this.multiTouchIteration]-this.x);
+              new Bullet(this.x, this.y, this.rot, false);
+
+              goAgain --;// Stack 2 bullets for slow devices
+            }
+
           }
           this.invalidTouchIndex = null;
 
-          this.rot = Math.atan2(touchPosYs[this.multiTouchIteration]-this.y, touchPosXs[this.multiTouchIteration]-this.x);
-          new Bullet(this.x, this.y, this.rot, false);
-          this.hasShotBefore = true;
-        }
-
-        if (gameManager.factory.wave > 4) {
-          this.showMissileBox = true;
-
+        if (gameManager.factory.wave > 6) {
           // Check if touch is inside box
           for (var i = 0; i < touchPosXs.length; i ++) {
             if (touchPosXs[i] >= canvas.width*0.69 && touchPosYs[i] > canvas.height*0.79) {
@@ -986,19 +1003,16 @@ var Player = function() {
     } else {
       this.rot = Math.atan2(mouseY-this.y, mouseX-this.x);
       if (leftIsPressed) {// Left mouse button
-        if (this.bulletTimeout <= 0) {
+        this.hasShotBefore = true;
+        var goAgain = 2;
+        while (this.bulletTimeout <= 0 && goAgain) {
           this.bulletTimeout += this.bulletTimeoutReset;
           new Bullet(this.x, this.y, this.rot, false);
-          this.hasShotBefore = true;
+          goAgain --;// Stack 2 bullets for slow devices
         }
       }
-      if (gameManager.factory.wave > 4) {
-        var endAngle = 2*Math.PI*(1-this.missileTimeout/this.missileTimeoutReset);
-        ctx.beginPath();
-        ctx.strokeStyle = "rgb(0, 100, 0)"
-        ctx.arc(this.x, this.y, this.size2*2, 0, endAngle);// Draw arc thingy under enemies
-        ctx.stroke();
-        if (rightIsPressedInstant && this.missileTimeout <= 0) {
+      if (gameManager.factory.wave > 6) {
+        if (rightIsPressed && this.missileTimeout <= 0) {
           this.hasShotMissileBefore = true;
           this.missileTimeout += this.missileTimeoutReset;
           new Missile(this.x, this.y, this.rot);
@@ -1006,7 +1020,13 @@ var Player = function() {
       }
     }
 
-
+    if (gameManager.factory.wave > 6) {
+      var endAngle = 2*Math.PI*(1-this.missileTimeout/this.missileTimeoutReset);
+      ctx.beginPath();
+      ctx.strokeStyle = "rgb(0, 100, 0)"
+      ctx.arc(this.x, this.y, this.size2*2, 0, endAngle);// Draw arc thingy under enemies
+      ctx.stroke();
+    }
   }
 
   this.draw = function() {
@@ -1026,23 +1046,31 @@ var Player = function() {
     ctx.closePath();
     ctx.stroke();
 
-    if (this.showMissileBox) {
+    if (isTouchMode && gameManager.factory.wave > 6) {
       // Draw missile box
       ctx.strokeStyle = "rgb(0, 255, 0)";
       ctx.beginPath();
-      ctx.lineTo(canvas.width*0.99, canvas.height*0.99);
-      ctx.lineTo(canvas.width*0.69, canvas.height*0.99);
-      ctx.lineTo(canvas.width*0.69, canvas.height*0.79);
-      ctx.lineTo(canvas.width*0.99, canvas.height*0.79);
+      ctx.lineTo(this.missileButX1, this.missileButY1);
+      ctx.lineTo(this.missileButX1, this.missileButY2);
+      ctx.lineTo(this.missileButX2, this.missileButY2);
+      ctx.lineTo(this.missileButX2, this.missileButY1);
       ctx.closePath();
       ctx.stroke();
-      ctx.fillStyle = "rgba(0, 255, 0, 0.25)";
-      ctx.fillRect(canvas.width*0.69, canvas.height*0.79, canvas.width*0.3*(1-this.missileTimeout/this.missileTimeoutReset), canvas.height*0.2);
+      this.missileButFadeIn += (this.missileButXDiff/16-this.missileButFadeIn)*0.05;
+      ctx.fillStyle = "rgb(255, 255, 255)";
+      ctx.beginPath();
+      ctx.lineTo(this.missileButX1+this.missileButSixteenth, this.missileButY2-this.missileButSixteenth);
+      ctx.lineTo(this.missileButX2-this.missileButSixteenth, this.missileButY2-this.missileButSixteenth);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(0, 255, 0, 0.4)";
+      ctx.fillRect(this.missileButX1, this.missileButY1, this.missileButXDiff*(1-this.missileTimeout/this.missileTimeoutReset), this.missileButYDiff);
 
       // Draw missile box label
       ctx.fillStyle = "rgb(255, 255, 255)";
-      ctx.font = "Bold "+(canvas.width*0.065)+"px monospace";
-      ctx.fillText("Missile", canvas.width*0.72, canvas.height*0.924);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "Bold "+(diagonalCanvasSize*0.045)+"px monospace";
+      ctx.fillText("Missile", this.missileButXMid, this.missileButYMid);
     }
   }
 
@@ -1060,16 +1088,22 @@ var Player = function() {
       if (!this.hasShotBefore) {
         ctx.fillStyle = "rgb(255, 255, 255)";
         ctx.font = (canvas.width/50)+"px monospace";
-        ctx.fillText("Click / tap to shoot. Avoid Geometry.", canvas.width*0.05, canvas.height*0.97);
-      } else if (!this.hasShotMissileBefore && gameManager.factory.wave > 4) {
+        ctx.textAlign = "left";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillText("Click / tap to shoot. Avoid Geometry.", canvas.width*0.01, canvas.height*0.99);
+      } else if (!this.hasShotMissileBefore && gameManager.factory.wave > 6) {
         if (isTouchMode) {
           ctx.fillStyle = "rgb(255, 255, 255)";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "alphabetic";
           ctx.font = (canvas.width/50)+"px monospace";
-          ctx.fillText("Fire missiles by tapping the Missile box.", canvas.width*0.05, canvas.height*0.97);
+          ctx.fillText("Fire missiles by tapping the Missile box.", canvas.width*0.01, canvas.height*0.99);
         } else {
           ctx.fillStyle = "rgb(255, 255, 255)";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "alphabetic";
           ctx.font = (canvas.width/50)+"px monospace";
-          ctx.fillText("Right click to fire missiles.", canvas.width*0.05, canvas.height*0.97);
+          ctx.fillText("Right click to fire missiles.", canvas.width*0.01, canvas.height*0.99);
         }
       }
     }
@@ -1085,15 +1119,20 @@ var Factory = function(d) {
   this.waves = [
     ["4"],
     ["4",1,"44",3,"44444"],
-    ["444",6,"33333",5,"333333", 5, "444", 4, "343433333"],
-    ["4",1,"4",1,"4",1,"4",1,"4",1,"4",1,"4",0.5,"4",0.5,"4",0.5,"4",0.5,"4",0.5,"4",0.5,"4",0.5,"4",0.5,"4",0.5,"4",3,"5"],
-    ["3333333333",5,"3333333333",2.5,"4",2,"3333333333",4,"3333333333",4,"333333333",2,"333333333"],
-    ["5555",4,"3333"],
+    ["444",4.5,"33333",5,"333333", 5, "444", 4, "343433333"],
+    ["4",1,"4",1,"4",1,"4",1,"4",1,"4",1,"4",0.5,"4",0.5,"4",0.5,"4",0.5,"4",0.5,"4",0.5,"44",0.5,"44",0.5,"44",0.5,"444",5,"5"],
+    ["3333333333",5,"3333333333",2.5,"4",2,"3333333333",4,"3333333333",4,"333333333",2,"333333333",3,"333333333"],
+    ["345",1,"345",1,"345",1,"34",1,"34",1,"34",1,"34",1,"34",20,"345",1,"345",1,"345",1,"345",1,"345",1,"34",1,"34",1,"34",1,"34",10,"343434343434343"],
+    ["334",0.5,"5",2,"333335",3,"4444",1,"444444444444444",5,"3333333333333333333333333333333333333333"],
+    ["555555555",4,"444444444444444444",6,"5555444444444444",5,"444444444444444444444444444"],
+    ["555555555555555555555555555555555555555555"],
     ["6"],
-    ["33333", 0.5, "333333", 4, "66", 6, "33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333"],
-
+    ["3553333435",4,"4554533454353",3.5,"443333555343434",10,'444444444444444444444444444',3,'3434343434343434343333333333333366'],
+    ["33333", 0.5, "333333", 4, "3333333333333333", 6, "33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"333336",0.5,"33333",0.5,"333336",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333"],
+    ["3333333444444555555666666"],
+    ["333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"6666",5,"44444444444444444444444455555",4,"3333333333333333333333333333333333333366"],
+    ["4"]
   ]
-
 
   this.wave = 0;
   this.phase = 0;
@@ -1127,7 +1166,7 @@ var Factory = function(d) {
 
           for (var i = 0; i < myWave[this.phase].length; i ++) {
 
-            var randomAngle = Math.random()*Math.PI*2;
+            var randomAngle = randomSeed(this.wave*100+this.phase*10+i*0.7)*Math.PI*2;
             var newX = halfWidth+diagonalCanvasSize*Math.cos(randomAngle)/2;
             var newY = halfHeight+diagonalCanvasSize*Math.sin(randomAngle)/2;
             switch (myWave[this.phase].charAt(i)) {
@@ -1175,13 +1214,18 @@ var Factory = function(d) {
       gradient.addColorStop("1.0", "red");
       // Fill with gradient
       ctx.fillStyle = gradient;
-      ctx.fillText("Winner.", canvas.width*0.028, canvas.height*0.59);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("Winner.", halfWidth, halfHeight);
     } else {
       if (this.waveTextTimeout > 0) {
         ctx.fillStyle = "rgb(255, 255, 255)";
         ctx.font = "Italic "+(canvas.width/10)+"px verdana";
-        ctx.fillText("W a v e", (halfWidth) - canvas.width*0.21, (halfHeight) - canvas.width/24);
-        ctx.fillText(this.waveNames[this.wave], (halfWidth) - canvas.width*0.032, (halfHeight) + canvas.width/11);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.fillText("W a v e", halfWidth, halfHeight);
+        ctx.textBaseline = "top";
+        ctx.fillText(this.waveNames[this.wave], halfWidth, halfHeight);
       }
     }
   }
@@ -1209,9 +1253,7 @@ var GameManager = function() {
       }
     }
 
-
-
-    if (evt.key === "n"){
+    if (evt.key === "n"){///
       gameManager.factory.phase = 0;
       gameManager.factory.wave ++;
       gameManager.bads = [];// Clear enemies
@@ -1234,10 +1276,12 @@ var GameManager = function() {
       if (this.player.isLost) {// If overlay buttons are displaying
         // Defeat text is now in HTML
       } else {// Normal pause mode
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
         ctx.font ="Bold "+(canvas.width/15)+"px monospace";
         var value = 66+66*Math.sin(timestamp/500);
         ctx.fillStyle = "rgb("+value+", "+value+", "+value+")";
-        ctx.fillText("Paused", canvas.width*0.4, canvas.height*0.48);
+        ctx.fillText("Paused", halfWidth, halfHeight/2);
       }
     } else {
 

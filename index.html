@@ -1,32 +1,35 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" href="stylesheet.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <title>Space Shooter Pro</title>
-    <script src="script1.js"></script>
+<head>
+  <meta charset="utf-8">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="stylesheet.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <title>Space Shooter Pro</title>
+  <script src="script1.js"></script>
 
-  </head>
-  <body onload="pageLoaded()">
+</head>
+<body onload="pageLoaded()">
 
-    <canvas id="can"></canvas>
+  <canvas id="can"></canvas>
 
-    <a id="fullscreen-button" href="#" onClick="requestFullScreen();" oncontextmenu="requestFullScreen();return false;" class="btn btn-info btn-lg">
-      <span class="glyphicon glyphicon-fullscreen"></span> Fullscreen
-    </a>
+  <a id="fullscreen-button" href="#" onClick="requestFullScreen();" oncontextmenu="requestFullScreen();return false;" class="btn btn-info btn-lg">
+    <span class="glyphicon glyphicon-fullscreen"></span> Fullscreen
+  </a>
 
-    <div id="overlay-content">
-      <h2>Defeat.</h2>
-      <div id="overlay-left" class="overlay" onclick="overlayOptions(1)">
-        <h1>Continue.</h1>
-        <p id="wave-number">Retry Wave 65534.</p>
-      </div>
-      <div id="overlay-right" class="overlay" onclick="overlayOptions(2)">
-        <h1>Quit.</h1>
-        <p>Geometry Wins.</p>
-      </div>
+  <div id="overlay-content">
+    <h2>Defeat.</h2>
+    <div id="overlay-left" class="overlay" onclick="overlayOptions(1)">
+      <h1>Continue.</h1>
+      <p id="wave-number">Retry Wave 65534.</p>
     </div>
-  </body>
-
+    <div id="overlay-right" class="overlay" onclick="overlayOptions(2)">
+      <h1>Quit.</h1>
+      <p>Geometry Wins.</p>
+    </div>
+  </div>
+</body>
 </html>
