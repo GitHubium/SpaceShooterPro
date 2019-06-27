@@ -1,11 +1,8 @@
-//// TODO: 3
-// finish levels 16-17
+//// TODO: 2
+// Finalize levels
 // make win screen less bland
-// create new enemy type
 
-// Bugs: 2
-// Overlay options resize the screen
-// Right overlay option larger than left  solution: reset mouse pos
+// Bugs: 0
 
 // Variables
 var pageIsLoaded = false;
@@ -270,6 +267,18 @@ var DecayLines = function(obj) {
   this.speed = diagonalCanvasSize*0.0006;
 
   switch (obj.sides) {
+    case 2:
+      var chX1 = Math.cos(this.rot1)*this.size;
+      var chY1 = Math.sin(this.rot1)*this.size;
+      var chX2 = Math.cos(this.rot2)*this.size;
+      var chY2 = Math.sin(this.rot2)*this.size;
+      this.points = [
+        {x:this.x-chX1+chY1, y:this.y-chY1-chX1},
+        {x:this.x+chX2+chY2, y:this.y+chY2-chX2},
+        {x:this.x-chX1-chY1, y:this.y-chY1+chX1}
+      ];
+      break;
+
     case 3:
       var chX1 = Math.cos(obj.rot1)*obj.size;
       var chY1 = Math.sin(obj.rot1)*obj.size;
@@ -560,7 +569,72 @@ var Missile = function(x, y, rot) {
     ctx.closePath();
     ctx.stroke();
   }
+};
 
+var Isosceles = function(x, y, rot) {
+  this.isDead = false;
+  gameManager.objs.push(this);
+  gameManager.bads.push(this);
+  this.x = x;
+  this.y = y;
+  this.rot1 = rot;
+  this.rot2 = this.rot1+Math.PI/5;
+
+  this.speed = 0.00008;
+  this.size = 0.01*diagonalCanvasSize;
+  this.hp = this.maxHp = 1;
+  this.velX = gameManager.player.x-this.x;
+  this.velY = gameManager.player.y-this.y;
+  var dist = Math.sqrt(this.velX*this.velX+this.velY*this.velY);
+  this.velX *= this.speed * diagonalCanvasSize / dist;
+  this.velY *= this.speed * diagonalCanvasSize / dist;
+  this.redness = 0;
+  this.sides = 2;
+
+  this.resize = function(diffX, diffY) {
+    this.size = 0.01*diagonalCanvasSize;
+    this.x = canvas.width*this.x/(canvas.width-diffX*4);
+    this.y = canvas.height*this.y/(canvas.height-diffY*4);
+    this.velX = halfWidth-this.x;
+    this.velY = halfHeight-this.y;
+    var dist = Math.sqrt(this.velX*this.velX+this.velY*this.velY);
+    this.velX *= this.speed * diagonalCanvasSize / dist;
+    this.velY *= this.speed * diagonalCanvasSize / dist;
+  }
+  this.update = function(d) {
+    var ps = -2*gameManager.player.size1;
+    if (this.x < -ps || this.x > canvas.width+ps || this.y < -ps || this.y > canvas.height+ps) {
+      this.x += this.velX*d*10;
+      this.y += this.velY*d*10;
+    } else {
+      this.x += this.velX*d;
+      this.y += this.velY*d;
+    }
+
+    var chX = this.x-halfWidth;
+    var chY = this.y-halfHeight;
+    if (Math.sqrt(chX*chX+chY*chY) < this.size+gameManager.player.size2) {
+      gameManager.player.isLost = true;
+    }
+
+    if (this.hp <= 0) {
+      this.isDead = true;
+    }
+  }
+  this.draw = function() {
+    ctx.strokeStyle = 'rgb(255, 0, 0)';
+
+    ctx.beginPath();
+    var chX1 = Math.cos(this.rot1)*this.size;
+    var chY1 = Math.sin(this.rot1)*this.size;
+    var chX2 = Math.cos(this.rot2)*this.size;
+    var chY2 = Math.sin(this.rot2)*this.size;
+    ctx.lineTo(this.x-chX1+chY1, this.y-chY1-chX1);
+    ctx.lineTo(this.x+chX2+chY2, this.y+chY2-chX2);
+    ctx.lineTo(this.x-chX1-chY1, this.y-chY1+chX1);
+    ctx.closePath();
+    ctx.stroke();
+  }
 };
 
 var Triangle = function(x, y) {
@@ -988,7 +1062,7 @@ var Player = function() {
         if (gameManager.factory.wave > 6) {
           // Check if touch is inside box
           for (var i = 0; i < touchPosXs.length; i ++) {
-            if (touchPosXs[i] >= canvas.width*0.69 && touchPosYs[i] > canvas.height*0.79) {
+            if (touchPosXs[i] >= this.missileButX1 && touchPosYs[i] > this.missileButY1) {
               this.invalidTouchIndex = i;
               if (this.missileTimeout <= 0) {
                 this.hasShotMissileBefore = true;
@@ -1116,7 +1190,7 @@ var Factory = function(d) {
 
 
 
-  this.waves = [
+  this.waves = [//lvl 7 harder eva
     ["4"],
     ["4",1,"44",3,"44444"],
     ["444",4.5,"33333",5,"333333", 5, "444", 4, "343433333"],
@@ -1129,9 +1203,10 @@ var Factory = function(d) {
     ["6"],
     ["3553333435",4,"4554533454353",3.5,"443333555343434",10,'444444444444444444444444444',3,'3434343434343434343333333333333366'],
     ["33333", 0.5, "333333", 4, "3333333333333333", 6, "33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"333336",0.5,"33333",0.5,"333336",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333"],
-    ["3333333444444555555666666"],
-    ["333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"6666",5,"44444444444444444444444455555",4,"3333333333333333333333333333333333333366"],
-    ["4"]
+    ["3333333344444445555555666666"],
+    ["333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"6666",5,"44444444444444444444444455555",4,"333333333333333333333333333333333333336666"],
+    ["555555555555555",5,"633334455555",4,"3333445555",3,"333344555",2,"33334455",1,"3333445",1,"3333445",1,"3333445",1,"3333445",1,"3333445",1,"4444444444",10,"444444444333",5,"3434343434343434343434",5,"4444",1,"333",1,"33344333",1,"33344",15,"3334444444444444444444444",7,"2222222222333333333",4,"33333",1,"33333",4,"2222222222333333333",4,"222244444444444444444444444433",3,"333333333333333",6,"3333333333333333"],//final
+    ["4",5,"2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",4.5,"2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",4.8,"2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222"]
   ]
 
   this.wave = 0;
@@ -1170,7 +1245,9 @@ var Factory = function(d) {
             var newX = halfWidth+diagonalCanvasSize*Math.cos(randomAngle)/2;
             var newY = halfHeight+diagonalCanvasSize*Math.sin(randomAngle)/2;
             switch (myWave[this.phase].charAt(i)) {
-
+              case "2":
+              new Isosceles(newX, newY, randomAngle+Math.PI);
+              break;
               case "3":
               new Triangle(newX, newY);
               break;
