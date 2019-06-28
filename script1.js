@@ -1,7 +1,4 @@
-//// TODO: 2
-// Finalize levels
-// make win screen less bland
-
+// TODO: 0
 // Bugs: 0
 
 // Variables
@@ -26,7 +23,7 @@ var halfWidth = 100;
 var halfHeight = 100;
 
 // Make Math more useful
-if (!("hypot" in Math)) {  // Polyfill
+if (!("hypot" in Math)) {
   Math.hypot = function(x, y) {
     return Math.sqrt(x * x + y * y);
   };
@@ -111,9 +108,6 @@ canvas.addEventListener("touchmove", function (e) {
   mouseY = mousePos.y;
 
 }, false);
-
-
-
 
 var metaUpdate = function () {///todo check for cross platform and debug here: http://bencentra.com/code/2014/12/05/html5-canvas-touch-events.html
   gameManager.update();
@@ -209,8 +203,8 @@ function draw(e) {
 }
 
 function randomSeed(seed) {
-    var x = Math.sin(seed) * 10000;
-    return x - Math.floor(x);
+  var x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
 }
 
 /** Game "objects" **/
@@ -232,8 +226,7 @@ var Sparks = function(x, y, obj) {
     this.points.push({x: x+Math.random()*4-2, y: y+Math.random()*4-2});
   }
 
-  this.resize = function() {///
-
+  this.resize = function() {
   };
 
   this.update = function(d) {
@@ -268,104 +261,109 @@ var DecayLines = function(obj) {
 
   switch (obj.sides) {
     case 2:
-      var chX1 = Math.cos(this.rot1)*this.size;
-      var chY1 = Math.sin(this.rot1)*this.size;
-      var chX2 = Math.cos(this.rot2)*this.size;
-      var chY2 = Math.sin(this.rot2)*this.size;
-      this.points = [
-        {x:this.x-chX1+chY1, y:this.y-chY1-chX1},
-        {x:this.x+chX2+chY2, y:this.y+chY2-chX2},
-        {x:this.x-chX1-chY1, y:this.y-chY1+chX1}
-      ];
-      break;
+    var chX1 = Math.cos(this.rot1)*this.size;
+    var chY1 = Math.sin(this.rot1)*this.size;
+    var chX2 = Math.cos(this.rot2)*this.size;
+    var chY2 = Math.sin(this.rot2)*this.size;
+    this.points = [
+      {x:this.x-chX1+chY1, y:this.y-chY1-chX1},
+      {x:this.x+chX2+chY2, y:this.y+chY2-chX2},
+      {x:this.x-chX1-chY1, y:this.y-chY1+chX1}
+    ];
+    break;
 
     case 3:
-      var chX1 = Math.cos(obj.rot1)*obj.size;
-      var chY1 = Math.sin(obj.rot1)*obj.size;
-      var chX2 = Math.cos(obj.rot2)*obj.size;
-      var chY2 = Math.sin(obj.rot2)*obj.size;
-      var chX3 = Math.cos(obj.rot3)*obj.size;
-      var chY3 = Math.sin(obj.rot3)*obj.size;
-      this.points = [
-        {x:obj.x+chX1+chY1, y:obj.y+chY1-chX1},
-        {x:obj.x+chX2+chY2, y:obj.y+chY2-chX2},
-        {x:obj.x+chX3+chY3, y:obj.y+chY3-chX3}
-      ];
-      break;
+    var chX1 = Math.cos(obj.rot1)*obj.size;
+    var chY1 = Math.sin(obj.rot1)*obj.size;
+    var chX2 = Math.cos(obj.rot2)*obj.size;
+    var chY2 = Math.sin(obj.rot2)*obj.size;
+    var chX3 = Math.cos(obj.rot3)*obj.size;
+    var chY3 = Math.sin(obj.rot3)*obj.size;
+    this.points = [
+      {x:obj.x+chX1+chY1, y:obj.y+chY1-chX1},
+      {x:obj.x+chX2+chY2, y:obj.y+chY2-chX2},
+      {x:obj.x+chX3+chY3, y:obj.y+chY3-chX3}
+    ];
+    break;
 
     case 4:
-      var chX1 = Math.cos(obj.rot1)*obj.size;
-      var chY1 = Math.sin(obj.rot1)*obj.size;
-      var chX2 = Math.cos(obj.rot2)*obj.size;
-      var chY2 = Math.sin(obj.rot2)*obj.size;
-      this.points = [
-        {x:obj.x+chX1+chY1, y:obj.y+chY1-chX1},
-        {x:obj.x+chX1-chY1, y:obj.y+chY1+chX1},
-        {x:obj.x+chX2+chY2, y:obj.y+chY2-chX2},
-        {x:obj.x+chX2-chY2, y:obj.y+chY2+chX2}
-      ];
-      break;
+    var chX1 = Math.cos(obj.rot1)*obj.size;
+    var chY1 = Math.sin(obj.rot1)*obj.size;
+    var chX2 = Math.cos(obj.rot2)*obj.size;
+    var chY2 = Math.sin(obj.rot2)*obj.size;
+    this.points = [
+      {x:obj.x+chX1+chY1, y:obj.y+chY1-chX1},
+      {x:obj.x+chX1-chY1, y:obj.y+chY1+chX1},
+      {x:obj.x+chX2+chY2, y:obj.y+chY2-chX2},
+      {x:obj.x+chX2-chY2, y:obj.y+chY2+chX2}
+    ];
+    break;
 
     case 5:
-      var chX1 = Math.cos(obj.rot1)*obj.size;
-      var chY1 = Math.sin(obj.rot1)*obj.size;
-      var chX2 = Math.cos(obj.rot2)*obj.size;
-      var chY2 = Math.sin(obj.rot2)*obj.size;
-      var chX3 = Math.cos(obj.rot3)*obj.size;
-      var chY3 = Math.sin(obj.rot3)*obj.size;
-      var chX4 = Math.cos(obj.rot4)*obj.size;
-      var chY4 = Math.sin(obj.rot4)*obj.size;
-      var chX5 = Math.cos(obj.rot5)*obj.size;
-      var chY5 = Math.sin(obj.rot5)*obj.size;
-      this.points = [
-        {x:obj.x+chX1+chY1, y:obj.y+chY1-chX1},
-        {x:obj.x+chX2+chY2, y:obj.y+chY2-chX2},
-        {x:obj.x+chX3+chY3, y:obj.y+chY3-chX3},
-        {x:obj.x+chX4+chY4, y:obj.y+chY4-chX4},
-        {x:obj.x+chX5+chY5, y:obj.y+chY5-chX5}
-      ];
-      break;
+    var chX1 = Math.cos(obj.rot1)*obj.size;
+    var chY1 = Math.sin(obj.rot1)*obj.size;
+    var chX2 = Math.cos(obj.rot2)*obj.size;
+    var chY2 = Math.sin(obj.rot2)*obj.size;
+    var chX3 = Math.cos(obj.rot3)*obj.size;
+    var chY3 = Math.sin(obj.rot3)*obj.size;
+    var chX4 = Math.cos(obj.rot4)*obj.size;
+    var chY4 = Math.sin(obj.rot4)*obj.size;
+    var chX5 = Math.cos(obj.rot5)*obj.size;
+    var chY5 = Math.sin(obj.rot5)*obj.size;
+    this.points = [
+      {x:obj.x+chX1+chY1, y:obj.y+chY1-chX1},
+      {x:obj.x+chX2+chY2, y:obj.y+chY2-chX2},
+      {x:obj.x+chX3+chY3, y:obj.y+chY3-chX3},
+      {x:obj.x+chX4+chY4, y:obj.y+chY4-chX4},
+      {x:obj.x+chX5+chY5, y:obj.y+chY5-chX5}
+    ];
+    break;
 
-      case 6:
-      var chX1 = Math.cos(this.rot1)*this.size;
-      var chY1 = Math.sin(this.rot1)*this.size;
-      var chX2 = Math.cos(this.rot2)*this.size;
-      var chY2 = Math.sin(this.rot2)*this.size;
-      var chX3 = Math.cos(this.rot3)*this.size;
-      var chY3 = Math.sin(this.rot3)*this.size;
-      this.points = [
-        {x:this.x+chX1+chY1, y:this.y+chY1-chX1},
-        {x:this.x-chX3-chY3, y:this.y-chY3+chX3},
-        {x:this.x+chX2+chY2, y:this.y+chY2-chX2},
-        {x:this.x-chX1-chY1, y:this.y-chY1+chX1},
-        {x:this.x+chX3+chY3, y:this.y+chY3-chX3},
-        {x:this.x-chX2-chY2, y:this.y-chY2+chX2}
-      ];
-        break;
+    case 6:
+    var chX1 = Math.cos(obj.rot1)*obj.size;
+    var chY1 = Math.sin(obj.rot1)*obj.size;
+    var chX2 = Math.cos(obj.rot2)*obj.size;
+    var chY2 = Math.sin(obj.rot2)*obj.size;
+    var chX3 = Math.cos(obj.rot3)*obj.size;
+    var chY3 = Math.sin(obj.rot3)*obj.size;
+    this.points = [
+      {x:obj.x+chX1+chY1, y:obj.y+chY1-chX1},
+      {x:obj.x-chX3-chY3, y:obj.y-chY3+chX3},
+      {x:obj.x+chX2+chY2, y:obj.y+chY2-chX2},
+      {x:obj.x-chX1-chY1, y:obj.y-chY1+chX1},
+      {x:obj.x+chX3+chY3, y:obj.y+chY3-chX3},
+      {x:obj.x-chX2-chY2, y:obj.y-chY2+chX2},
+      {x:obj.x+chX1+chY1, y:obj.y+chY1-chX1},//Double decay lines
+      {x:obj.x-chX3-chY3, y:obj.y-chY3+chX3},
+      {x:obj.x+chX2+chY2, y:obj.y+chY2-chX2},
+      {x:obj.x-chX1-chY1, y:obj.y-chY1+chX1},
+      {x:obj.x+chX3+chY3, y:obj.y+chY3-chX3},
+      {x:obj.x-chX2-chY2, y:obj.y-chY2+chX2},
+    ];
+    break;
+  }
+
+  // Split into lines
+  var beforeI;
+  for (var i = 0; i < this.points.length; i++) {
+    if (i === 0) {
+      beforeI = this.points.length-1;
+    } else {
+      beforeI = i-1;
     }
+    this.points[i].x2 = this.points[beforeI].x;
+    this.points[i].y2 = this.points[beforeI].y;
+  }
 
-    // Split into lines
-    var beforeI;
-    for (var i = 0; i < this.points.length; i++) {
-      if (i === 0) {
-        beforeI = this.points.length-1;
-      } else {
-        beforeI = i-1;
-      }
-      this.points[i].x2 = this.points[beforeI].x;
-      this.points[i].y2 = this.points[beforeI].y;
-    }
+  // Calculate bias direction
+  var chX = obj.x-halfWidth;
+  var chY = obj.y-halfHeight;
+  var dist = Math.sqrt(chX*chX+chY*chY);
+  this.biasX = chX/dist;
+  this.biasY = chY/dist;
 
-    // Calculate bias direction
-    var chX = obj.x-halfWidth;
-    var chY = obj.y-halfHeight;
-    var dist = Math.sqrt(chX*chX+chY*chY);
-    this.biasX = chX/dist;
-    this.biasY = chY/dist;
-
-    this.resize = function() {///
-    };
-
+  this.resize = function() {
+  };
 
   this.update = function(d) {
     for (var i = 0; i < this.points.length; i ++) {
@@ -436,37 +434,37 @@ var Bullet = function(x, y, rot, isGreen) {
         }
       }
     } else {
-    for (var i = 0; i < gameManager.bads.length; i++) {
-      var bad = gameManager.bads[i];
-      var chX = bad.x-this.x;
-      var chY = bad.y-this.y;
-      var dist = Math.sqrt(chX*chX+chY*chY);
-      if (dist < bad.size*1.25) {
-        if (bad.sides === 6 && this.greenness === 0) {// If a hexagon
-          bad.greenness = 1;
-          var sixth = Math.PI/3;
-          var initRot = bad.rot1-Math.PI/12;
-          new Bullet(bad.x, bad.y, initRot, true);
-          new Bullet(bad.x, bad.y, initRot+sixth, true);
-          new Bullet(bad.x, bad.y, initRot+sixth*2, true);
-          new Bullet(bad.x, bad.y, initRot+sixth*3, true);
-          new Bullet(bad.x, bad.y, initRot+sixth*4, true);
-          new Bullet(bad.x, bad.y, initRot+sixth*5, true);
+      for (var i = 0; i < gameManager.bads.length; i++) {
+        var bad = gameManager.bads[i];
+        var chX = bad.x-this.x;
+        var chY = bad.y-this.y;
+        var dist = Math.sqrt(chX*chX+chY*chY);
+        if (dist < bad.size*1.25) {
+          if (bad.sides === 6 && this.greenness === 0) {// If a hexagon
+            bad.greenness = 1;
+            var sixth = Math.PI/3;
+            var initRot = bad.rot1-Math.PI/12;
+            new Bullet(bad.x, bad.y, initRot, true);
+            new Bullet(bad.x, bad.y, initRot+sixth, true);
+            new Bullet(bad.x, bad.y, initRot+sixth*2, true);
+            new Bullet(bad.x, bad.y, initRot+sixth*3, true);
+            new Bullet(bad.x, bad.y, initRot+sixth*4, true);
+            new Bullet(bad.x, bad.y, initRot+sixth*5, true);
 
-        } else {
-          bad.hp --;
-          if (bad.redness < 0.5) {
-            bad.redness = 3;
-            new Sparks(this.x, this.y, bad);
+          } else {
+            bad.hp --;
+            if (bad.redness < 0.5) {
+              bad.redness = 3;
+              new Sparks(this.x, this.y, bad);
 
 
+            }
           }
+          this.isDead = true;
+          break;
         }
-        this.isDead = true;
-        break;
       }
     }
-  }
 
     var ps = gameManager.player.size1;
     if (this.x2 < -ps || this.x2 > canvas.width+ps || this.y2 < -ps || this.y2 > canvas.height+ps) {
@@ -728,7 +726,7 @@ var Square = function(x, y) {
   this.y = y;
   this.rot1 = Math.random();
   this.rot2 = this.rot1+Math.PI;
-  this.speed = 0.00001;////////////////
+  this.speed = 0.00001;
   this.size = 0.01*diagonalCanvasSize;
   this.hp = this.maxHp = 25;
   this.velX = gameManager.player.x-this.x;
@@ -1036,28 +1034,28 @@ var Player = function() {
 
     if (isTouchMode) {
       if (touchPosXs.length > 0) {
-          if (touchPosXs.length !== 1 || this.invalidTouchIndex === null) {// If NOT exclusively pressing the missile button
+        if (touchPosXs.length !== 1 || this.invalidTouchIndex === null) {// If NOT exclusively pressing the missile button
+          if (++this.multiTouchIteration >= touchPosXs.length) {
+            this.multiTouchIteration = 0;
+          }
+          if (this.multiTouchIteration === this.invalidTouchIndex) {
             if (++this.multiTouchIteration >= touchPosXs.length) {
               this.multiTouchIteration = 0;
             }
-            if (this.multiTouchIteration === this.invalidTouchIndex) {
-              if (++this.multiTouchIteration >= touchPosXs.length) {
-                this.multiTouchIteration = 0;
-              }
-            }
-
-            this.hasShotBefore = true;
-            var goAgain = 2;
-            while (this.bulletTimeout <= 0 && goAgain) {
-              this.bulletTimeout += this.bulletTimeoutReset;
-              this.rot = Math.atan2(touchPosYs[this.multiTouchIteration]-this.y, touchPosXs[this.multiTouchIteration]-this.x);
-              new Bullet(this.x, this.y, this.rot, false);
-
-              goAgain --;// Stack 2 bullets for slow devices
-            }
-
           }
-          this.invalidTouchIndex = null;
+
+          this.hasShotBefore = true;
+          var goAgain = 2;
+          while (this.bulletTimeout <= 0 && goAgain) {
+            this.bulletTimeout += this.bulletTimeoutReset;
+            this.rot = Math.atan2(touchPosYs[this.multiTouchIteration]-this.y, touchPosXs[this.multiTouchIteration]-this.x);
+            new Bullet(this.x, this.y, this.rot, false);
+
+            goAgain --;// Stack 2 bullets for slow devices
+          }
+
+        }
+        this.invalidTouchIndex = null;
 
         if (gameManager.factory.wave > 6) {
           // Check if touch is inside box
@@ -1203,8 +1201,8 @@ var Factory = function(d) {
     ["6"],
     ["3553333435",4,"4554533454353",3.5,"443333555343434",10,'444444444444444444444444444',3,'3434343434343434343333333333333366'],
     ["33333", 0.5, "333333", 4, "3333333333333333", 6, "33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"333336",0.5,"33333",0.5,"333336",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"33333",0.5,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333",0.2,"3333333333"],
-    ["3333333344444445555555666666"],
-    ["333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"6666",5,"44444444444444444444444455555",4,"333333333333333333333333333333333333336666"],
+    ["333333334444444555555556666"],
+    ["333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"333445",1,"656",5,"44444444444444444444444455555",4,"333333333333333333333333333333333333336666"],
     ["555555555555555",5,"633334455555",4,"3333445555",3,"333344555",2,"33334455",1,"3333445",1,"3333445",1,"3333445",1,"3333445",1,"3333445",1,"4444444444",10,"444444444333",5,"3434343434343434343434",5,"4444",1,"333",1,"33344333",1,"33344",15,"3334444444444444444444444",7,"2222222222333333333",4,"33333",1,"33333",4,"2222222222333333333",4,"222244444444444444444444444433",3,"333333333333333",6,"3333333333333333"],//final
     ["4",5,"2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",4.5,"2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",4.8,"2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222"]
   ]
@@ -1215,6 +1213,17 @@ var Factory = function(d) {
   this.phaseTimeout = 1;
   this.isWon = false;
   this.isReadyForNextPhase = false;
+  this.win = {
+    screenGradient: 2,
+    confetX: [],
+    confetVelX: [],
+    confetY: [],
+    confetVelY: [],
+    confetR: [],
+    confetVelR: [],
+    confetC: [],
+  }
+  this.winScreenGradient = 2;
 
   this.update = function(d) {
 
@@ -1280,20 +1289,81 @@ var Factory = function(d) {
 
   }
   this.draw = function() {
-    // Wave text
-
     if (this.isWon) {
+      var wi = this.win;
+
+      /* Gradient win text */
       ctx.font = (canvas.width/5)+"px Verdana";
-      // Create gradient
       var gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-      gradient.addColorStop("0", "magenta");
-      gradient.addColorStop("0.54", "blue");
-      gradient.addColorStop("1.0", "red");
-      // Fill with gradient
+      var val = wi.screenGradient;
+      if (val >= 0) {
+        wi.screenGradient -= 1/60;
+      } else {
+        wi.screenGradient += 2;
+      }
+      var inRange = function(n) {
+        return Math.min(Math.max(n, 0), 1);
+      }
+      gradient.addColorStop(inRange(-2+val), "rgb(0, 0, 255)");
+      gradient.addColorStop(inRange(-1.5+val), "rgb(255, 0, 0)");
+      gradient.addColorStop(inRange(-1+val), "rgb(0, 0, 255)");
+      gradient.addColorStop(inRange(-0.5+val), "rgb(255, 0, 0)");
+      gradient.addColorStop(inRange(0+val), "blue");
+      gradient.addColorStop(inRange(0.5+val), "red");
+      gradient.addColorStop(inRange(1+val), "blue");
       ctx.fillStyle = gradient;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("Winner.", halfWidth, halfHeight);
+
+      /* Confetti */
+      wi.confetX.push(Math.random()*canvas.width);
+      wi.confetVelX.push((Math.random()-0.45)*canvas.width*0.01);
+      wi.confetY.push(-diagonalCanvasSize*0.01);
+      wi.confetVelY.push(3);
+      wi.confetR.push(Math.random()*Math.PI);
+      wi.confetVelR.push((Math.random()-0.5)*0.3);
+      var c, n = Math.floor(Math.random()*4);
+      if (n === 0) {
+        c = "rgb(0, 255, 0)";
+      } else if (n === 1) {
+        c = "rgb(255, 0, 0)";
+      } else if (n === 2) {
+        c = "rgb(255, 0, 255)";
+      } else {
+        c = "rgb(0, 0, 255)";
+      }
+      wi.confetC.push(c);
+
+      ctx.lineWidth = diagonalCanvasSize*0.004;
+      for (var i = wi.confetX.length-1; i > -1; i --) {
+        wi.confetVelY[i] += canvas.height*0.0001;
+        wi.confetX[i] += wi.confetVelX[i];
+        wi.confetY[i] += wi.confetVelY[i];
+        wi.confetR[i] += wi.confetVelR[i];
+        var cx = wi.confetX[i];
+        var cy = wi.confetY[i];
+        var confettiLen = diagonalCanvasSize*0.005;
+        var chX = confettiLen*Math.cos(wi.confetR[i]);
+        var chY = confettiLen*Math.sin(wi.confetR[i]);
+        ctx.strokeStyle = wi.confetC[i];
+        ctx.beginPath();
+        ctx.lineTo(cx+chX, cy-chY);
+        ctx.lineTo(cx-chX, cy+chY);
+        ctx.closePath();
+        ctx.stroke();
+        if (wi.confetY[i] > canvas.height) {
+          wi.confetX.splice(i, 1);
+          wi.confetVelX.splice(i, 1);
+          wi.confetY.splice(i, 1);
+          wi.confetVelY.splice(i, 1);
+          wi.confetR.splice(i, 1);
+          wi.confetVelR.splice(i, 1);
+          wi.confetC.splice(i, 1);
+        }
+      }
+      ctx.lineWidth = diagonalCanvasSize*0.001;
+
     } else {
       if (this.waveTextTimeout > 0) {
         ctx.fillStyle = "rgb(255, 255, 255)";
@@ -1330,7 +1400,7 @@ var GameManager = function() {
       }
     }
 
-    if (evt.key === "n"){///
+    if (evt.key === "n"){// Remove this if people find out
       gameManager.factory.phase = 0;
       gameManager.factory.wave ++;
       gameManager.bads = [];// Clear enemies
