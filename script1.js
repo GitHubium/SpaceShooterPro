@@ -24,6 +24,7 @@ var isPaused = false;
 var halfWidth = 100;
 var halfHeight = 100;
 var mouseButton = 1;
+var isFirefoxOrEdge = (typeof InstallTrigger !== 'undefined') || (!isIE && !!window.StyleMedia);
 
 // Make Math more useful
 if (!("hypot" in Math)) {
@@ -138,9 +139,12 @@ function overlayOptions(option) {
     leftIsPressed = false;// Reset mouse status
     rightIsPressed = false;
 
-    canvas.style.webkitFilter = "blur(0px)";// Remove blur
+    if (!isFirefoxOrEdge) {
+      canvas.style.webkitFilter = "blur(0px)";// Remove blur
+    }
     document.getElementById("overlay-content").style.display = "none";
     document.getElementById("fullscreen-button").style.display = "";// Show fullscreen button
+
 
   } else if (option === 2) {
     window.location.href = "https://githubium.github.io";
@@ -1159,7 +1163,9 @@ var Player = function() {
         document.getElementById('wave-number').innerHTML = "Retry Wave "+gameManager.factory.waveNames[gameManager.factory.wave]+"."
         document.getElementById("fullscreen-button").style.display = "none";// Hide fullscreen button
       }
-      canvas.style.webkitFilter = "blur(5px)";// Blur canvas
+      if (!isFirefoxOrEdge) {
+        canvas.style.webkitFilter = "blur(5px)";// Blur canvas
+      }
     } else {
       if (!this.hasShotBefore) {
         ctx.fillStyle = "rgb(255, 255, 255)";
@@ -1466,6 +1472,11 @@ var GameManager = function() {
     this.player.overlay();
 
     this.factory.draw();
+
+    if (this.player.isLost && isFirefoxOrEdge) {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     /* Reset mouse press */
     leftIsPressedInstant = false;
