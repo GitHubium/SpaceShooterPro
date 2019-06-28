@@ -1,3 +1,5 @@
+'use strict';
+
 // TODO: 0
 // Bugs: 0
 
@@ -21,6 +23,7 @@ var touchPosYs = [];
 var isPaused = false;
 var halfWidth = 100;
 var halfHeight = 100;
+var mouseButton = 1;
 
 // Make Math more useful
 if (!("hypot" in Math)) {
@@ -535,6 +538,7 @@ var Missile = function(x, y, rot) {
       } else if (gotoAngle - this.rot1 > Math.PI) {
         gotoAngle -= Math.PI*2;
       }
+      var diffAngle;
       if (gotoAngle > this.rot1) {
         diffAngle = d*0.005;
       } else {
