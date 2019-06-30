@@ -24,6 +24,7 @@ var isPaused = false;
 var halfWidth = 100;
 var halfHeight = 100;
 var mouseButton = 1;
+var isIE = /*@cc_on!@*/false || !!document.documentMode;
 var isFirefoxOrEdge = (typeof InstallTrigger !== 'undefined') || (!isIE && !!window.StyleMedia);
 
 // Make Math more useful
