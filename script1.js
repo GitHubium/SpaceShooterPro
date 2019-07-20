@@ -409,7 +409,7 @@ var Bullet = function(x, y, rot, isGreen) {
   this.x = x;
   this.y = y;
   if (isGreen) {
-    this.greenness = 0.3;
+    this.greenness = 0.6;//was 0.3 but that was causing issues
   } else {
     this.greenness = 0;
   }
@@ -1425,6 +1425,9 @@ var GameManager = function() {
     var timestamp = Date.now();
     var delta = timestamp - this._lastTimestamp;
     this._lastTimestamp = timestamp;
+    if (delta > 240) {
+      delta = 0;
+    }
 
     /* Background */
     ctx.fillStyle = "rgb(0, 0, 0)";
